@@ -5,12 +5,15 @@ import android.os.Bundle
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.view.LayoutInflater
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import mael.hoon.yellowdust.data.Repository
 import mael.hoon.yellowdust.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -19,6 +22,8 @@ class MainActivity : AppCompatActivity() {
     private var cancellationTokenSource: CancellationTokenSource? = null
 
     private val viewBinding by lazy { ActivityMainBinding.inflate(layoutInflater) }
+    //메인 엑티비티의 코루틴들을 관리한다.
+    private val scope = MainScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,10 +35,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        cancellationTokenSource?.cancel() // null이아닐경우 cancel시킨다.
-    }
 
-    @SuppressLint("MissingPermission")
+        cancellationTokenSource?.cancel() // null이아닐경우 cancel시킨다.
+        scope.cancel()
+    }
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -48,14 +53,7 @@ class MainActivity : AppCompatActivity() {
         if (!locationPermissionGranted) {
             finish()
         } else {
-            cancellationTokenSource = CancellationTokenSource()
-
-            fusedLocationProviderClient.getCurrentLocation( //Task를 반환하기 때문에 addOnSuccessListener를 선언한다.
-                LocationRequest.PRIORITY_HIGH_ACCURACY,
-                cancellationTokenSource!!.token
-            ).addOnSuccessListener { location ->
-                viewBinding.textView.text = "${location.latitude}, ${location.longitude}"
-            }
+            fetchAirQualityData()
         }
     }
 
@@ -72,6 +70,26 @@ class MainActivity : AppCompatActivity() {
             ),
             REQUEST_ACCESS_LOCATION_PERMISSIONS
         )
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun fetchAirQualityData(){
+        // fetchData
+        cancellationTokenSource = CancellationTokenSource()
+
+        fusedLocationProviderClient.getCurrentLocation( //Task를 반환하기 때문에 addOnSuccessListener를 선언한다.
+            LocationRequest.PRIORITY_HIGH_ACCURACY,
+            cancellationTokenSource!!.token
+        ).addOnSuccessListener { location ->
+            scope.launch {
+                val monitoringStation = Repository.getNearbyMonitoringStation(location.latitude,location.longitude)
+
+                val measuredValue =
+                    Repository.getLatestAirQulityData(monitoringStation!!.stationName!!)
+
+                viewBinding.textView.text = measuredValue.toString()
+            }
+        }
     }
 
     companion object {

@@ -3,6 +3,7 @@
     <style name="Base.Theme.YellowDust" parent="Theme.Material3.Light.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowTranslucentStatus">true</item>
     </style>
 
     <style name="Theme.YellowDust" parent="Base.Theme.YellowDust" />

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.view.View
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
@@ -14,6 +15,9 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mael.hoon.yellowdust.data.Repository
+import mael.hoon.yellowdust.data.models.airquality.Grade
+import mael.hoon.yellowdust.data.models.airquality.MeasuredValue
+import mael.hoon.yellowdust.data.models.monitoringstation.MonitoringStation
 import mael.hoon.yellowdust.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -22,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private var cancellationTokenSource: CancellationTokenSource? = null
 
     private val viewBinding by lazy { ActivityMainBinding.inflate(layoutInflater) }
+
     //메인 엑티비티의 코루틴들을 관리한다.
     private val scope = MainScope()
 
@@ -30,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(viewBinding.root)
 
         requestLocationPermissions()
+        bindViews()
         initVariables()
     }
 
@@ -39,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         cancellationTokenSource?.cancel() // null이아닐경우 cancel시킨다.
         scope.cancel()
     }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -53,6 +60,12 @@ class MainActivity : AppCompatActivity() {
         if (!locationPermissionGranted) {
             finish()
         } else {
+            fetchAirQualityData()
+        }
+    }
+
+    private fun bindViews(){
+        viewBinding.refresh.setOnRefreshListener{
             fetchAirQualityData()
         }
     }
@@ -73,7 +86,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun fetchAirQualityData(){
+    private fun fetchAirQualityData() {
         // fetchData
         cancellationTokenSource = CancellationTokenSource()
 
@@ -82,12 +95,69 @@ class MainActivity : AppCompatActivity() {
             cancellationTokenSource!!.token
         ).addOnSuccessListener { location ->
             scope.launch {
-                val monitoringStation = Repository.getNearbyMonitoringStation(location.latitude,location.longitude)
+                viewBinding.errorDescriptionTextView.visibility = View.GONE
+                try {
+                    val monitoringStation =
+                        Repository.getNearbyMonitoringStation(location.latitude, location.longitude)
 
-                val measuredValue =
-                    Repository.getLatestAirQulityData(monitoringStation!!.stationName!!)
+                    val measuredValue =
+                        Repository.getLatestAirQulityData(monitoringStation!!.stationName!!)
 
-                viewBinding.textView.text = measuredValue.toString()
+                    displayAirQualityData(monitoringStation, measuredValue!!)
+                } catch (e: Exception) {
+                    viewBinding.errorDescriptionTextView.visibility = View.VISIBLE
+                    viewBinding.contentsLayout.alpha = 0F
+                } finally {
+                    with(viewBinding) {
+                        progressBar.visibility = View.GONE
+                        refresh.isRefreshing = false
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    fun displayAirQualityData(monitoringStation: MonitoringStation, measuredValue: MeasuredValue) {
+        with(viewBinding) {
+            contentsLayout.animate()
+                .alpha(1F)
+                .start()
+            measuringStationNameTextView.text = monitoringStation.stationName
+            measuringStationAddressTextView.text = "측정소 위치 : ${monitoringStation.addr}"
+
+            (measuredValue.khaiGrade ?: Grade.UNKNOWN).let { grade ->
+                root.setBackgroundResource(grade.colorResId)
+                totalGradeLabelTextView.text = grade.label
+                totalGradeEmojiTextView.text = grade.emoji
+            }
+
+            with(measuredValue) {
+                fineDustInformationTextView.text =
+                    "미세먼지 : $pm10Value ㎍/㎥ ${(pm10grade ?: Grade.UNKNOWN).emoji}"
+                ultraFineDustInformationTextView.text =
+                    "초미세먼지 : $pm25Value ㎍/㎥ ${(pm25grade ?: Grade.UNKNOWN).emoji}"
+
+                with(viewBinding.so2Item) {
+                    labelTextView.text = "아황산가스"
+                    gradeTextView.text = (so2grade ?: Grade.UNKNOWN).toString()
+                    valueTextView.text = "$so2Value ppm"
+                }
+                with(viewBinding.co2Item) {
+                    labelTextView.text = "일산화탄소"
+                    gradeTextView.text = (coGrade ?: Grade.UNKNOWN).toString()
+                    valueTextView.text = "$coValue ppm"
+                }
+                with(viewBinding.o3Item) {
+                    labelTextView.text = "오존"
+                    gradeTextView.text = (o3grade ?: Grade.UNKNOWN).toString()
+                    valueTextView.text = "$o3Value ppm"
+                }
+                with(viewBinding.no2Item) {
+                    labelTextView.text = "이산화질소"
+                    gradeTextView.text = (no2grade ?: Grade.UNKNOWN).toString()
+                    valueTextView.text = "$no2Value ppm"
+                }
             }
         }
     }

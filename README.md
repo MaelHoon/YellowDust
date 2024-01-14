@@ -1,3 +1,6 @@
+● 메인 페이지
+![미세먼지앱](https://github.com/MaelHoon/YellowDust/assets/149458609/3317a1fb-de39-4c78-a0a4-116656aaf5b3)
+
 ● 사용기술
 1. 위치정보 받기
    - fusedLocationProvider
@@ -28,3 +31,8 @@ OpenAPI의 응답 양식(Response 샘플데이터)을 추가한다. advance를 �
 
 ● airQulity grade 정보
 ![image](https://github.com/MaelHoon/YellowDust/assets/149458609/2fdc7e78-1eec-4eaa-870b-67e20c86e882)
+
+● 기타 메모
+1. themes.xml에서 <item name="android:windowTranslucentStatus">true</item> 속성을 주면
+   기기의 상단 툴바색상이 앱의 background색상에 영향을 받게 설정 할 수 있다.
+2. Manifest.xml에서 activity안에 android:screenOrientation="portrait" 속성을 주면 화면 회전을 막을 수 있다.

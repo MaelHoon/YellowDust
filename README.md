@@ -10,6 +10,8 @@
 4. API비동기 처리
   - Coroutine
 5. App Widgets
+  - AppWidgetProvider
+  - AppWidgetProviderInfo
 
 ● API모델 자동 생성 활용
 gson모델을 정의 한다. API는 필요한 응답을 보고 처리하는게 좋은데,

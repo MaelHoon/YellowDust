@@ -1,6 +1,7 @@
 ● 메인 페이지
 
 ![미세먼지앱](https://github.com/MaelHoon/YellowDust/assets/149458609/3317a1fb-de39-4c78-a0a4-116656aaf5b3)
+![KakaoTalk_20240115_204039235](https://github.com/MaelHoon/YellowDust/assets/149458609/f4c5884e-0258-4ce2-9311-e9cc7e1ec323)
 
 ● 사용기술
 1. 위치정보 받기

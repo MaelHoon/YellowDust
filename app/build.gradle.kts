@@ -61,6 +61,9 @@ dependencies {
     //retrofit으로 받은 API데이터의 logging을 위한 의존성
     implementation("com.squareup.okhttp3:logging-interceptor:4.6.0")
 
+    implementation("androidx.lifecycle:lifecycle-service:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     testImplementation("junit:junit:4.13.2")

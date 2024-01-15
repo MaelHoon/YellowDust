@@ -10,6 +10,10 @@
 4. API비동기 처리
   - Coroutine
 5. App Widgets
+  - AppWidgetProvider
+  -> 앱 위젯을 담는 xml파일(레이아웃 사이즈 및 업데이트 주기 등을 담고 있음)
+  - AppWidgetProviderInfo
+  -> 시스템에서 앱 위젯을 요청하면 앱을 제공하는 서비스
 
 ● API모델 자동 생성 활용
 gson모델을 정의 한다. API는 필요한 응답을 보고 처리하는게 좋은데,
